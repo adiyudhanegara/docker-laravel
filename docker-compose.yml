@@ -1,0 +1,74 @@
+version: "3.7"
+services:
+  db:
+    image: mysql:8.0
+    container_name: ${PROJECT_NAME}-db
+    command: --default-authentication-plugin=caching_sha2_password
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    ports:
+      - 3306:3306
+    networks:
+      laravel_net:
+        ipv4_address: ${PROJECT_IP}.2
+  app:
+    image: ${PROJECT_NAME}
+    container_name: ${PROJECT_NAME}-app
+    build:
+      args:
+        user: ${PROJECT_USER}
+        uid: 1000
+      context: ./
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    working_dir: /var/www/webroot
+    volumes:
+      - ./:/var/www
+    networks:
+      laravel_net:
+        ipv4_address: ${PROJECT_IP}.3
+  nginx:
+    image: nginx:1.17-alpine
+    container_name: ${PROJECT_NAME}-nginx
+    restart: unless-stopped
+    ports:
+      - 8000:80
+    volumes:
+      - ./:/var/www
+      - ./docker-compose/nginx:/etc/nginx/conf.d/
+    networks:
+      laravel_net:
+        ipv4_address: ${PROJECT_IP}.4
+  redis:
+    image: redis:latest
+    container_name: ${PROJECT_NAME}-redis
+    networks:
+      laravel_net:
+        ipv4_address: ${PROJECT_IP}.5
+  phpmyadmin:
+    image: phpmyadmin
+    container_name: ${PROJECT_NAME}-phpmyadmin
+    links:
+      - db
+    environment:
+      PMA_HOST: db
+      PMA_PORT: 3306
+      PMA_ARBITRARY: 1
+    restart: always
+    ports:
+      - 8081:80
+    networks:
+      laravel_net:
+        ipv4_address: ${PROJECT_IP}.6
+
+networks:
+  laravel_net:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+      - subnet: ${PROJECT_IP}.0/24
