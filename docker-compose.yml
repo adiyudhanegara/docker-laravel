@@ -28,6 +28,7 @@ services:
     working_dir: /var/www/webroot
     volumes:
       - ./:/var/www
+      - ./home:/home/${PROJECT_USER}
     networks:
       laravel_net:
         ipv4_address: ${PROJECT_IP}.3
