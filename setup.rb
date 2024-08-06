@@ -5,12 +5,12 @@ require 'ipaddr'
 require 'rbconfig'
 
 ### SETTINGS ###
-$project_name     = "laravelproject"
+$project_name     = "wedding"
 $host_name        = $project_name + ".test"
 $db_root_pw       = "12345"
 $db_user_pw       = "123456"
 $db_prod_user_pw  = "1234567"
-$network          = "172.22.0.0/24"
+$network          = "172.22.11.0/24"
 $forwarded_port   = nil
 $php_version      = nil
 $laravel_version  = nil
@@ -109,7 +109,7 @@ def create_docker_files
 
   File.write("Dockerfile-app", <<~EOF)
     FROM node:latest AS node
-    FROM php:fpm AS php
+    FROM php:#{"#{$php_version}-" unless $php_version.nil?}fpm AS php
 
     # Arguments defined in docker-compose.yml
     ARG uid
@@ -173,11 +173,9 @@ def create_docker_files
 
     # Set working directory
     WORKDIR /var/www
-    COPY env/starter.sh /usr/local/bin
 
     USER $user
     CMD ["/usr/local/bin/starter.sh"]
-
   EOF
 
   File.write("Dockerfile-web", <<~EOF)
@@ -192,8 +190,7 @@ def create_docker_files
         openssl req -x509 -nodes -days 3650 -newkey rsa:2048 -keyout /etc/nginx/ssl/nginx.key -out /etc/nginx/ssl/nginx.crt -subj "/C=JP/CN=$hostname" && \\
         apt-get clean && rm -r /var/lib/apt/lists/*
 
-    COPY env/nginx.conf /etc/nginx/nginx.conf'
-
+    COPY env/nginx.conf /etc/nginx/nginx.conf
   EOF
 end
 
