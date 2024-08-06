@@ -109,7 +109,7 @@ def create_docker_files
 
   File.write("Dockerfile-app", <<~EOF)
     FROM node:latest AS node
-    FROM php:#{"#{$php_version}-" unless $php_version.nil?}fpm
+    FROM php:fpm AS php
 
     # Arguments defined in docker-compose.yml
     ARG uid
@@ -117,13 +117,41 @@ def create_docker_files
 
     # Install system dependencies
     RUN apt-get update && apt-get install -y \\
-        git \\
-        curl \\
-        libpng-dev \\
         libonig-dev \\
         libxml2-dev \\
+        libfontconfig1-dev \\
+        git \\
+        curl \\
+        xclip
+
+    # ZIP Stuffs
+    RUN apt-get update && apt-get install -y \\
         zip \\
-        unzip
+        unzip \\
+        libzip-dev \\
+        && docker-php-ext-install zip
+
+    # GD Stuffs
+    RUN apt-get update && apt-get install -y \\
+        libfreetype6-dev \\
+        libjpeg62-turbo-dev \\
+        libpng-dev \\
+        libwebp-dev
+
+    # Install PHP extensions, configure, and enable all php packages
+    RUN set -eux; \\
+      docker-php-ext-configure gd --enable-gd --with-freetype --with-jpeg --with-webp; \\
+      docker-php-ext-configure intl; \\
+      docker-php-ext-configure zip; \\
+      docker-php-ext-install -j "$(nproc)" \\
+        intl \\
+        opcache \\
+        pdo_mysql \\
+        mbstring \\
+        exif \\
+        pcntl \\
+        bcmath \\
+        gd
 
     # Node JS
     COPY --from=node /usr/local/lib/node_modules /usr/local/lib/node_modules
@@ -132,20 +160,16 @@ def create_docker_files
 
     # For convinience
     RUN apt-get install -y vim zsh-antigen less redis-tools
-    
+
     # Clear cache
     RUN apt-get clean && rm -rf /var/lib/apt/lists/*
-    
-    # Install PHP extensions
-    RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd
 
     # Get latest Composer
     COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
     # Create system user to run Composer and Artisan Commands
     RUN useradd -G www-data,root -u $uid -d /home/$user $user
-    RUN mkdir -p /home/$user/.composer && \
-        chown -R $user:$user /home/$user
+    RUN mkdir -p /home/$user/.composer && chown -R $user:$user /home/$user
 
     # Set working directory
     WORKDIR /var/www
@@ -153,6 +177,7 @@ def create_docker_files
 
     USER $user
     CMD ["/usr/local/bin/starter.sh"]
+
   EOF
 
   File.write("Dockerfile-web", <<~EOF)
@@ -167,7 +192,8 @@ def create_docker_files
         openssl req -x509 -nodes -days 3650 -newkey rsa:2048 -keyout /etc/nginx/ssl/nginx.key -out /etc/nginx/ssl/nginx.crt -subj "/C=JP/CN=$hostname" && \\
         apt-get clean && rm -r /var/lib/apt/lists/*
 
-    COPY env/nginx.conf /etc/nginx/nginx.conf
+    COPY env/nginx.conf /etc/nginx/nginx.conf'
+
   EOF
 end
 
