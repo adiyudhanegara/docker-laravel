@@ -173,6 +173,7 @@ def create_docker_files
 
     # Set working directory
     WORKDIR /var/www
+    COPY env/starter.sh /usr/local/bin/starter.sh
 
     USER $user
     CMD ["/usr/local/bin/starter.sh"]
