@@ -1,2 +1,10 @@
 database/*
+database/
+db-init/*
+db-init
 webroot/*
+webroot/
+
+docker-compose.yml 
+Dockerfile-app 
+Dockerfile-web
