@@ -5,12 +5,12 @@ require 'ipaddr'
 require 'rbconfig'
 
 ### SETTINGS ###
-$project_name     = "wedding"
+$project_name     = "laravelproject"
 $host_name        = $project_name + ".test"
 $db_root_pw       = "12345"
 $db_user_pw       = "123456"
 $db_prod_user_pw  = "1234567"
-$network          = "172.22.11.0/24"
+$network          = "172.22.0.0/24"
 $forwarded_port   = nil
 $php_version      = nil
 $laravel_version  = nil
@@ -426,7 +426,7 @@ FileUtils.chown($user_id, nil, "database") if Process.uid == 0
 
 create_docker_files
 create_compose_file
-system "docker compose build"
+system "docker compose build --no-cache"
 
 db_init
 laravel_init
