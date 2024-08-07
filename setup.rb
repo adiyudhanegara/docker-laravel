@@ -5,12 +5,12 @@ require 'ipaddr'
 require 'rbconfig'
 
 ### SETTINGS ###
-$project_name     = "laravelproject"
+$project_name     = "wedding"
 $host_name        = $project_name + ".test"
 $db_root_pw       = "12345"
 $db_user_pw       = "123456"
 $db_prod_user_pw  = "1234567"
-$network          = "172.22.0.0/24"
+$network          = "172.22.11.0/24"
 $forwarded_port   = nil
 $php_version      = nil
 $laravel_version  = nil
@@ -372,24 +372,24 @@ def laravel_create_env
   laravel_env = File.read("webroot/.env").split("\n").map do |config|
     var = config.split("=")
     case var[0]
-    when "APP_NAME"
-      "#{var[0]}=\"#{$project_name}\""
-    when "APP_URL"
-      "#{var[0]}=http://#{$net_web_ip.to_s}"
-    when "DB_CONNECTION"
-      "#{var[0]}=mysql"
-    when "DB_HOST"
-      "#{var[0]}=#{$net_db_ip}"
-    when "DB_PORT"
-      "#{var[0]}=3306"
-    when "DB_DATABASE"
-      "#{var[0]}=#{$db_name}_development"
-    when "DB_USERNAME"
-      "#{var[0]}=#{$db_user}"
-    when "DB_PASSWORD"
-      "#{var[0]}=#{$db_user_pw}"
-    when "REDIS_HOST"
-      "#{var[0]}=#{$net_redis_ip.to_s}"
+    when "APP_NAME", "# APP_NAME"
+      "APP_NAME=\"#{$project_name}\""
+    when "APP_URL", "# APP_URL"
+      "APP_URL=http://#{$net_web_ip.to_s}"
+    when "DB_CONNECTION", "# DB_CONNECTION"
+      "DB_CONNECTION=mysql"
+    when "DB_HOST", "# DB_HOST"
+      "DB_HOST=#{$net_db_ip}"
+    when "DB_PORT", "# DB_PORT"
+      "DB_PORT=3306"
+    when "DB_DATABASE", "# DB_DATABASE"
+      "DB_DATABASE=#{$db_name}_development"
+    when "DB_USERNAME", "# DB_USERNAME"
+      "DB_USERNAME=#{$db_user}"
+    when "DB_PASSWORD", "# DB_PASSWORD"
+      "DB_PASSWORD=#{$db_user_pw}"
+    when "REDIS_HOST", "# REDIS_HOST"
+      "REDIS_HOST=#{$net_redis_ip.to_s}"
     else
       config
     end
